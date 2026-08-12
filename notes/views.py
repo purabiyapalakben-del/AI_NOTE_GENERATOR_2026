@@ -10,6 +10,10 @@ client = ollama.Client(host=NGROK_URL)
 
 def home(request):
     return render(request, 'home.html')
+def register_view(request):
+    return render(request, 'register.html')
+def login_views(request):
+    return render(request, 'login.html')
 
 
 # 2. Response Viewa

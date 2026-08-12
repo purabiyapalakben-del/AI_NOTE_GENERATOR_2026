@@ -12,7 +12,7 @@ def home(request):
     return render(request, 'home.html')
 def register_view(request):
     return render(request, 'register.html')
-def login_views(request):
+def login_view(request):
     return render(request, 'login.html')
 
 

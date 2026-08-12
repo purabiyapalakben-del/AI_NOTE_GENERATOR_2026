@@ -6,32 +6,50 @@ from django.contrib import messages
 import ollama
 
 
-# Ngrok Setup
+# =========================
+# Ollama / Ngrok Setup
+# =========================
+
 NGROK_URL = "https://reclaim-grid-happy.ngrok-free.dev"
-client = ollama.Client(host=NGROK_URL)
+
+client = ollama.Client(
+    host=NGROK_URL
+)
 
 
+# =========================
 # 1. Home View
+# =========================
+
 def home(request):
     return render(request, "home.html")
 
 
+# =========================
 # 2. Login View
+# =========================
+
 def login_view(request):
+
     if request.method == "POST":
-        u_name = request.POST.get("username")
-        p_word = request.POST.get("password")
+
+        username = request.POST.get("username")
+        password = request.POST.get("password")
 
         user = authenticate(
             request,
-            username=u_name,
-            password=p_word
+            username=username,
+            password=password
         )
 
         if user is not None:
+
             login(request, user)
+
             return redirect("home")
+
         else:
+
             messages.error(
                 request,
                 "Invalid username or password"
@@ -40,21 +58,29 @@ def login_view(request):
     return render(request, "login.html")
 
 
+# =========================
 # 3. Register View
-def register_view(request):
-    if request.method == "POST":
-        u_name = request.POST.get("username")
-        p_word = request.POST.get("password")
+# =========================
 
-        if User.objects.filter(username=u_name).exists():
+def register_view(request):
+
+    if request.method == "POST":
+
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        if User.objects.filter(username=username).exists():
+
             messages.error(
                 request,
                 "Username already exists"
             )
+
         else:
+
             User.objects.create_user(
-                username=u_name,
-                password=p_word
+                username=username,
+                password=password
             )
 
             messages.success(
@@ -62,23 +88,37 @@ def register_view(request):
                 "Account created successfully! Please login."
             )
 
-            return redirect("login_view")
+            return redirect("login")
 
     return render(request, "register.html")
 
 
+# =========================
 # 4. Logout View
+# =========================
+
 def logout_view(request):
+
     logout(request)
-    return redirect("login_view")
+
+    return redirect("login")
 
 
-# 5. AI Note Generator Response View
+# =========================
+# 5. AI Note Generator
+# =========================
+
 def generate_response(request):
+
     if request.method == "POST":
-        user_prompt = request.POST.get("prompt", "")
+
+        user_prompt = request.POST.get(
+            "prompt",
+            ""
+        )
 
         try:
+
             response = client.chat(
                 model="llama3",
                 messages=[
@@ -97,6 +137,7 @@ def generate_response(request):
             })
 
         except Exception as e:
+
             return JsonResponse({
                 "status": "error",
                 "message": str(e)

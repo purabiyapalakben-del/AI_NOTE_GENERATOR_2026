@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Login | AI Note Generator{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center align-items-center" style="min-height:80vh;">
+
+        <div class="col-md-6 col-lg-5">
+
+            <div class="glass-card">
+
+                <div class="text-center mb-4">
+
+                    <h1 style="font-size:60px;">🤖</h1>
+
+                    <h2 class="fw-bold text-white">
+                        Welcome Back
+                    </h2>
+
+                    <p class="text-light">
+                        Sign in to continue using AI Note Generator
+                    </p>
+
+                </div>
+
+                <form method="POST">
+
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label text-white">
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            name="username"
+                            class="form-control"
+                            placeholder="Enter your username"
+                            required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white">
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            name="password"
+                            class="form-control"
+                            placeholder="Enter your password"
+                            required>
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-3">
+
+                        <i class="bi bi-box-arrow-in-right"></i>
+
+                        Login
+
+                    </button>
+
+                </form>
+
+                <hr class="text-light my-4">
+
+                <p class="text-center text-light">
+
+                    Don't have an account?
+
+                    <a href="{% url 'register' %}"
+                       class="text-info text-decoration-none fw-bold">
+
+                        Register Here
+
+                    </a>
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

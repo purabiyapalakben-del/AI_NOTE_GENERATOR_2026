@@ -2,23 +2,22 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import ollama
 
-# 1. Ngrok URL સેટ કરો (આ લિંક Ngrok CMD વિન્ડોમાંથી મળેલ છે)
+# Ngrok Client Setup
 NGROK_URL = 'https://reclaim-grid-happy.ngrok-free.dev'
-
-# 2. Ollama Client તૈયાર કરો
-client = ollama.Client(host='https://reclaim-grid-happy.ngrok-free.dev')
+client = ollama.Client(host=NGROK_URL)
 
 
+
+def home(request):
+    return render(request, 'home.html')
+
+
+# 2. Response Viewa
 def generate_response(request):
-    """
-    આ View ફંકશન Render પરથી રન થશે પણ
-    Ngrok ના માધ્યમથી તમારા PC ના Ollama નો ઉપયોગ કરશે.
-    """
     if request.method == 'POST':
         user_prompt = request.POST.get('prompt', '')
 
         try:
-            # તમારા PC પર જે મોડેલ ઇન્સ્ટોલ હોય (દા.ત. llama3, mistral, gemma વગેરે) તે વાપરો
             response = client.chat(
                 model='llama3',
                 messages=[
@@ -28,10 +27,7 @@ def generate_response(request):
                     },
                 ]
             )
-
-            # Ollama માંથી મળેલો જવાબ extract કરો
             result_text = response['message']['content']
-
             return JsonResponse({'status': 'success', 'response': result_text})
 
         except Exception as e:

@@ -32,7 +32,10 @@ def login_view(request):
             login(request, user)
             return redirect("home")
         else:
-            messages.error(request, "Invalid username or password")
+            messages.error(
+                request,
+                "Invalid username or password"
+            )
 
     return render(request, "login.html")
 
@@ -44,16 +47,21 @@ def register_view(request):
         p_word = request.POST.get("password")
 
         if User.objects.filter(username=u_name).exists():
-            messages.error(request, "Username already exists")
+            messages.error(
+                request,
+                "Username already exists"
+            )
         else:
             User.objects.create_user(
                 username=u_name,
                 password=p_word
             )
+
             messages.success(
                 request,
                 "Account created successfully! Please login."
             )
+
             return redirect("login_view")
 
     return render(request, "register.html")

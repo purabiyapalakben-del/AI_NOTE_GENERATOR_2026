@@ -1,10 +1,12 @@
 from django.urls import path
 from . import views
 
-
-urlpatterns=[
-
-    path("",views.home,name="home"),
+urlpatterns = [
+    path(
+        "",
+        views.home,
+        name="home"
+    ),
 
     path(
         "register/",
@@ -12,18 +14,21 @@ urlpatterns=[
         name="register"
     ),
 
-
     path(
         "login/",
         views.login_view,
-        name="login"
+        name="login_view"
     ),
-
 
     path(
         "logout/",
         views.logout_view,
-        name="logout"
+        name="logout_view"
     ),
 
+    path(
+        "generate-response/",
+        views.generate_response,
+        name="generate_response"
+    ),
 ]

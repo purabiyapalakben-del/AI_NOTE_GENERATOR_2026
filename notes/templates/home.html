@@ -6,253 +6,426 @@
 
 <section class="hero-section">
 
-<div class="container">
+    <div class="container">
 
-<div class="row align-items-center">
+        <div class="row align-items-center">
 
-<!-- LEFT -->
+            <!-- LEFT SIDE -->
 
-<div class="col-lg-6">
+            <div class="col-lg-6">
 
-<span class="badge bg-primary mb-4">
+                <span class="badge bg-primary mb-4">
+                    🚀 AI Powered PDF Summarizer
+                </span>
 
-🚀 AI Powered PDF Summarizer
+                <h1>
+                    Generate
+                    <span class="gradient-text">
+                        Smart AI Notes
+                    </span>
+                    <br>
+                    From Your PDFs
+                </h1>
 
-</span>
+                <p>
+                    Upload any PDF document and let AI create
+                    structured, easy-to-understand study notes
+                    in seconds.
+                </p>
 
-<h1>
+                <div class="mt-4 d-flex gap-3 flex-wrap">
 
-Generate <span class="gradient-text">Smart AI Notes</span><br>
-From Your PDFs
+                    <div class="stats-card">
+                        <h2>100%</h2>
+                        <span>AI Powered</span>
+                    </div>
 
-</h1>
+                    <div class="stats-card">
+                        <h2>Fast</h2>
+                        <span>Processing</span>
+                    </div>
 
-<p>
+                    <div class="stats-card">
+                        <h2>PDF</h2>
+                        <span>Support</span>
+                    </div>
 
-Upload any PDF document and let AI create structured,
-easy-to-understand study notes in seconds.
+                </div>
 
-</p>
+            </div>
 
-<div class="mt-4 d-flex gap-3 flex-wrap">
 
-<div class="stats-card">
+            <!-- RIGHT SIDE -->
 
-<h2>100%</h2>
+            <div class="col-lg-6">
 
-<span>AI Powered</span>
+                <div class="glass-card">
 
-</div>
+                    <h3 class="mb-4 text-white">
 
-<div class="stats-card">
+                        <i class="bi bi-cloud-arrow-up-fill"></i>
 
-<h2>Fast</h2>
+                        Upload PDF
 
-<span>Processing</span>
+                    </h3>
 
-</div>
 
-<div class="stats-card">
+                    {% if user.is_authenticated %}
 
-<h2>PDF</h2>
+                    <!-- PDF UPLOAD FORM -->
 
-<span>Support</span>
+                    <form
+                        method="POST"
+                        enctype="multipart/form-data"
+                    >
 
-</div>
+                        {% csrf_token %}
 
-</div>
 
-</div>
+                        <div class="mb-4">
 
-<!-- RIGHT -->
+                            <label
+                                for="pdfFile"
+                                class="form-label text-white fw-bold"
+                            >
+                                Select PDF File
+                            </label>
 
-<div class="col-lg-6">
 
-<div class="glass-card">
+                            <input
+                                type="file"
+                                id="pdfFile"
+                                name="file"
+                                accept=".pdf,application/pdf"
+                                class="form-control"
+                                required
+                            >
 
-<h3 class="mb-4">
+                        </div>
 
-<i class="bi bi-cloud-arrow-up-fill"></i>
 
-Upload PDF
+                        <!-- SELECTED FILE NAME -->
 
-</h3>
+                        <div
+                            id="selectedFileBox"
+                            class="alert alert-success"
+                            style="display:none;"
+                        >
 
-{% if user.is_authenticated %}
+                            📄 Selected file:
 
-<form method="POST" enctype="multipart/form-data">
+                            <strong id="selectedFileName"></strong>
 
-{% csrf_token %}
+                        </div>
 
-{{ form.as_p }}
 
-<button class="btn btn-primary w-100">
+                        <!-- GENERATE BUTTON -->
 
-✨ Generate AI Notes
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100 py-3"
+                        >
 
-</button>
+                            ✨ Generate AI Notes
 
-</form>
+                        </button>
 
-{% else %}
+                    </form>
 
-<div class="text-center">
 
-<i class="bi bi-lock-fill display-1 text-warning"></i>
+                    {% else %}
 
-<h4 class="mt-3">
+                    <!-- LOGIN REQUIRED -->
 
-Login Required
+                    <div class="text-center">
 
-</h4>
+                        <i
+                            class="bi bi-lock-fill display-1 text-warning"
+                        ></i>
 
-<p class="text-light">
+                        <h4 class="mt-3 text-white">
+                            Login Required
+                        </h4>
 
-Please login or register before uploading PDF.
+                        <p class="text-light">
+                            Please login or register before
+                            uploading PDF.
+                        </p>
 
-</p>
 
-<a href="{% url 'login' %}" class="btn btn-primary">
+                        <a
+                            href="{% url 'login' %}"
+                            class="btn btn-primary"
+                        >
 
-Login
+                            <i class="bi bi-box-arrow-in-right"></i>
 
-</a>
+                            Login
 
-<a href="{% url 'register' %}" class="btn btn-outline-light ms-2">
+                        </a>
 
-Register
 
-</a>
+                        <a
+                            href="{% url 'register' %}"
+                            class="btn btn-outline-light ms-2"
+                        >
 
-</div>
+                            <i class="bi bi-person-plus-fill"></i>
 
-{% endif %}
+                            Register
 
-</div>
+                        </a>
 
-</div>
+                    </div>
 
-</div>
+                    {% endif %}
 
-</div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </section>
 
-<!-- FEATURES -->
+
+<!-- =========================
+     MESSAGES
+========================= -->
+
+{% if messages %}
+
+<section class="container mt-4">
+
+    {% for message in messages %}
+
+    <div class="alert alert-info">
+
+        {{ message }}
+
+    </div>
+
+    {% endfor %}
+
+</section>
+
+{% endif %}
+
+
+<!-- =========================
+     FEATURES
+========================= -->
 
 <section class="container mb-5">
 
-<div class="row g-4">
+    <div class="row g-4">
 
-<div class="col-md-4">
 
-<div class="feature-card">
+        <!-- FEATURE 1 -->
 
-<i class="bi bi-file-earmark-pdf-fill feature-icon"></i>
+        <div class="col-md-4">
 
-<h4>Upload PDF</h4>
+            <div class="feature-card">
 
-<p>
+                <i
+                    class="bi bi-file-earmark-pdf-fill feature-icon"
+                ></i>
 
-Upload study material, books or notes easily.
+                <h4>
+                    Upload PDF
+                </h4>
 
-</p>
+                <p>
+                    Upload study material,
+                    books or notes easily.
+                </p>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-<div class="col-md-4">
 
-<div class="feature-card">
+        <!-- FEATURE 2 -->
 
-<i class="bi bi-stars feature-icon"></i>
+        <div class="col-md-4">
 
-<h4>AI Notes</h4>
+            <div class="feature-card">
 
-<p>
+                <i
+                    class="bi bi-stars feature-icon"
+                ></i>
 
-Generate well structured notes using Llama 3 AI.
+                <h4>
+                    AI Notes
+                </h4>
 
-</p>
+                <p>
+                    Generate well structured
+                    notes using Llama 3 AI.
+                </p>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-<div class="col-md-4">
 
-<div class="feature-card">
+        <!-- FEATURE 3 -->
 
-<i class="bi bi-lightning-charge-fill feature-icon"></i>
+        <div class="col-md-4">
 
-<h4>Fast Results</h4>
+            <div class="feature-card">
 
-<p>
+                <i
+                    class="bi bi-lightning-charge-fill feature-icon"
+                ></i>
 
-Receive clean summaries within seconds.
+                <h4>
+                    Fast Results
+                </h4>
 
-</p>
+                <p>
+                    Receive clean summaries
+                    within seconds.
+                </p>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-</div>
+    </div>
 
 </section>
 
+
+<!-- =========================
+     AI GENERATED NOTES
+========================= -->
+
 {% if summary %}
 
-<section class="container">
+<section class="container mb-5">
 
-<div class="summary-card">
+    <div class="summary-card">
 
-<div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div
+            class="d-flex justify-content-between
+                   align-items-center flex-wrap"
+        >
 
-<h2>
+            <h2>
+                🧠 AI Generated Notes
+            </h2>
 
-🧠 AI Generated Notes
 
-</h2>
+            <button
+                type="button"
+                onclick="copySummary()"
+                class="btn btn-light"
+            >
 
-<div>
+                <i class="bi bi-clipboard"></i>
 
-<button onclick="copySummary()" class="btn btn-light">
+                Copy
 
-<i class="bi bi-clipboard"></i>
+            </button>
 
-Copy
+        </div>
 
-</button>
 
-</div>
+        <hr>
 
-</div>
 
-<hr>
+        <div
+            id="summaryText"
+            class="summary-text"
+        >
 
-<div id="summaryText" class="summary-text">
+            {{ summary|linebreaks }}
 
-{{ summary }}
+        </div>
 
-</div>
-
-</div>
+    </div>
 
 </section>
 
 {% endif %}
 
+
+<!-- =========================
+     JAVASCRIPT
+========================= -->
+
 <script>
 
-function copySummary(){
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-const text=document.getElementById("summaryText").innerText;
+        const fileInput =
+            document.getElementById("pdfFile");
 
-navigator.clipboard.writeText(text);
+        const selectedFileBox =
+            document.getElementById("selectedFileBox");
 
-alert("Summary Copied Successfully!");
+        const selectedFileName =
+            document.getElementById("selectedFileName");
+
+
+        if (fileInput) {
+
+            fileInput.addEventListener(
+                "change",
+                function () {
+
+                    if (
+                        this.files &&
+                        this.files.length > 0
+                    ) {
+
+                        selectedFileName.textContent =
+                            this.files[0].name;
+
+                        selectedFileBox.style.display =
+                            "block";
+
+                    } else {
+
+                        selectedFileName.textContent = "";
+
+                        selectedFileBox.style.display =
+                            "none";
+
+                    }
+
+                }
+            );
+
+        }
+
+    }
+);
+
+
+function copySummary() {
+
+    const summaryText =
+        document.getElementById("summaryText");
+
+    if (!summaryText) {
+        return;
+    }
+
+
+    navigator.clipboard.writeText(
+        summaryText.innerText
+    );
+
+
+    alert(
+        "Summary Copied Successfully!"
+    );
 
 }
 

@@ -4,19 +4,102 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 
-import ollama
+import os
+import time
+from dotenv import load_dotenv
+from google import genai
 
 from .utils import extract_text_from_pdf
 
 
 # =========================================================
-# OLLAMA SETUP - LOCAL ONLY
+# GEMINI SETUP
 # =========================================================
 
-client = ollama.Client(
-    host="http://127.0.0.1:11434",
-    timeout=300
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    print("WARNING: GEMINI_API_KEY is not set.")
+
+client = genai.Client(
+    api_key=GEMINI_API_KEY,
+    http_options={
+        "api_version": "v1"
+    }
 )
+
+# Stable Gemini Flash model
+GEMINI_MODEL = "gemini-3.6-flash"
+
+
+# =========================================================
+# HELPER FUNCTION - GEMINI RESPONSE
+# =========================================================
+
+def generate_gemini_response(prompt, retries=3):
+    """
+    Generate Gemini response with automatic retry
+    for temporary errors such as 503.
+    """
+
+    last_error = None
+
+    for attempt in range(retries):
+
+        try:
+
+            print("------------------------------------")
+            print("Connecting to Gemini...")
+            print("Model:", GEMINI_MODEL)
+            print("Attempt:", attempt + 1)
+            print("------------------------------------")
+
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt
+            )
+
+            if response and response.text:
+                return response.text
+
+            raise Exception("Gemini returned an empty response.")
+
+        except Exception as e:
+
+            last_error = e
+
+            error_text = str(e).lower()
+
+            print("Gemini Error:", str(e))
+
+            # Retry temporary server errors
+            if (
+                "503" in error_text
+                or "unavailable" in error_text
+                or "high demand" in error_text
+                or "429" in error_text
+                or "rate" in error_text
+            ):
+
+                if attempt < retries - 1:
+
+                    wait_time = 2 ** attempt
+
+                    print(
+                        f"Temporary Gemini error. "
+                        f"Retrying in {wait_time} seconds..."
+                    )
+
+                    time.sleep(wait_time)
+
+                    continue
+
+            # Other errors should stop immediately
+            raise e
+
+    raise last_error
 
 
 # =========================================================
@@ -34,44 +117,59 @@ def home(request):
         print("PDF GENERATION REQUEST RECEIVED")
         print("====================================")
 
-        # Check login
+        # -------------------------------------------------
+        # LOGIN CHECK
+        # -------------------------------------------------
+
         if not request.user.is_authenticated:
+
             messages.error(
                 request,
                 "Please login before generating AI notes."
             )
+
             return redirect("login")
 
-        # Get uploaded PDF
+        # -------------------------------------------------
+        # GET FILE
+        # -------------------------------------------------
+
         pdf_file = request.FILES.get("file")
 
         if not pdf_file:
+
             messages.error(
                 request,
                 "Please choose a PDF file."
             )
+
             return render(
                 request,
                 "home.html",
                 {
-                    "summary": summary,
+                    "summary": "",
                     "form": form
                 }
             )
 
-        print("PDF FILE:", pdf_file.name)
+        print("Uploaded file:", pdf_file.name)
 
-        # Check PDF extension
+        # -------------------------------------------------
+        # CHECK PDF EXTENSION
+        # -------------------------------------------------
+
         if not pdf_file.name.lower().endswith(".pdf"):
+
             messages.error(
                 request,
                 "Only PDF files are supported."
             )
+
             return render(
                 request,
                 "home.html",
                 {
-                    "summary": summary,
+                    "summary": "",
                     "form": form
                 }
             )
@@ -86,9 +184,12 @@ def home(request):
 
             text = extract_text_from_pdf(pdf_file)
 
-            print("Extracted text length:", len(text))
+            print(
+                "Extracted text length:",
+                len(text)
+            )
 
-            if not text.strip():
+            if not text or not text.strip():
 
                 messages.error(
                     request,
@@ -111,8 +212,9 @@ def home(request):
             prompt = f"""
 You are an AI Study Notes Generator.
 
-Read the following PDF content and create clear,
-well-structured and easy-to-understand study notes.
+Read the following PDF content and create
+clear, well-structured and easy-to-understand
+study notes.
 
 Follow this format:
 
@@ -125,9 +227,17 @@ Follow this format:
 7. Applications / Examples
 8. Conclusion
 
-Use simple language suitable for college students.
+Instructions:
 
-Use headings and bullet points wherever appropriate.
+- Use simple language suitable for college students.
+- Use clear headings.
+- Use bullet points wherever appropriate.
+- Keep the explanation accurate and easy to study.
+- Make the notes useful for exam preparation.
+- Do not add unrelated information.
+- Base the answer only on the provided PDF content.
+- Do not mention that you are an AI.
+- Make the notes clean and well formatted.
 
 PDF CONTENT:
 
@@ -135,31 +245,13 @@ PDF CONTENT:
 """
 
             # =================================================
-            # CONNECT TO LOCAL OLLAMA
+            # GENERATE AI NOTES
             # =================================================
 
-            print("Connecting to local Ollama...")
-            print("Ollama URL: http://127.0.0.1:11434")
-            print("Model: llama3.2:3b")
-
-            response = client.chat(
-                model="llama3.2:3b",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
-            )
-
-            # =================================================
-            # GET AI RESPONSE
-            # =================================================
-
-            summary = response["message"]["content"]
+            summary = generate_gemini_response(prompt)
 
             print("====================================")
-            print("       AI GENERATION SUCCESS")
+            print("AI GENERATION SUCCESS")
             print("====================================")
 
             return render(
@@ -174,16 +266,61 @@ PDF CONTENT:
         except Exception as e:
 
             print("====================================")
-            print("       AI GENERATION ERROR")
+            print("AI GENERATION ERROR")
             print("====================================")
 
             print(str(e))
 
             print("====================================")
 
+            error_text = str(e).lower()
+
+            # -------------------------------------------------
+            # USER FRIENDLY ERROR MESSAGES
+            # -------------------------------------------------
+
+            if (
+                "503" in error_text
+                or "unavailable" in error_text
+                or "high demand" in error_text
+            ):
+
+                error_message = (
+                    "Gemini is temporarily busy. "
+                    "Please try again after a few seconds."
+                )
+
+            elif (
+                "429" in error_text
+                or "quota" in error_text
+                or "rate" in error_text
+            ):
+
+                error_message = (
+                    "Gemini API limit has been reached. "
+                    "Please try again later."
+                )
+
+            elif (
+                "api key" in error_text
+                or "authentication" in error_text
+                or "permission" in error_text
+            ):
+
+                error_message = (
+                    "Gemini API authentication failed. "
+                    "Please check your API key."
+                )
+
+            else:
+
+                error_message = (
+                    f"AI Error: {str(e)}"
+                )
+
             messages.error(
                 request,
-                f"AI Error: {str(e)}"
+                error_message
             )
 
             return render(
@@ -194,6 +331,10 @@ PDF CONTENT:
                     "form": form
                 }
             )
+
+    # =========================================================
+    # GET REQUEST
+    # =========================================================
 
     return render(
         request,
@@ -213,8 +354,15 @@ def login_view(request):
 
     if request.method == "POST":
 
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        username = request.POST.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.POST.get(
+            "password",
+            ""
+        )
 
         user = authenticate(
             request,
@@ -224,7 +372,10 @@ def login_view(request):
 
         if user is not None:
 
-            login(request, user)
+            login(
+                request,
+                user
+            )
 
             messages.success(
                 request,
@@ -254,8 +405,19 @@ def register_view(request):
 
     if request.method == "POST":
 
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        username = request.POST.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.POST.get(
+            "password",
+            ""
+        )
+
+        # -------------------------------------------------
+        # REQUIRED FIELDS
+        # -------------------------------------------------
 
         if not username or not password:
 
@@ -263,6 +425,10 @@ def register_view(request):
                 request,
                 "Username and password are required."
             )
+
+        # -------------------------------------------------
+        # CHECK USERNAME
+        # -------------------------------------------------
 
         elif User.objects.filter(
             username=username
@@ -272,6 +438,10 @@ def register_view(request):
                 request,
                 "Username already exists."
             )
+
+        # -------------------------------------------------
+        # CREATE USER
+        # -------------------------------------------------
 
         else:
 
@@ -315,6 +485,10 @@ def logout_view(request):
 
 def generate_response(request):
 
+    # -------------------------------------------------
+    # REQUEST METHOD
+    # -------------------------------------------------
+
     if request.method != "POST":
 
         return JsonResponse(
@@ -324,6 +498,24 @@ def generate_response(request):
             },
             status=400
         )
+
+    # -------------------------------------------------
+    # LOGIN CHECK
+    # -------------------------------------------------
+
+    if not request.user.is_authenticated:
+
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Please login first."
+            },
+            status=401
+        )
+
+    # -------------------------------------------------
+    # GET PROMPT
+    # -------------------------------------------------
 
     user_prompt = request.POST.get(
         "prompt",
@@ -342,21 +534,13 @@ def generate_response(request):
 
     try:
 
-        response = client.chat(
-            model="llama3.2:3b",
-            messages=[
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
-            ]
-        )
+        # -------------------------------------------------
+        # GEMINI
+        # -------------------------------------------------
 
-        result_text = response[
-            "message"
-        ][
-            "content"
-        ]
+        result_text = generate_gemini_response(
+            user_prompt
+        )
 
         return JsonResponse(
             {
@@ -367,10 +551,42 @@ def generate_response(request):
 
     except Exception as e:
 
+        print(
+            "AI RESPONSE ERROR:",
+            str(e)
+        )
+
+        error_text = str(e).lower()
+
+        if (
+            "503" in error_text
+            or "unavailable" in error_text
+            or "high demand" in error_text
+        ):
+
+            message = (
+                "Gemini is temporarily busy. "
+                "Please try again."
+            )
+
+        elif (
+            "429" in error_text
+            or "quota" in error_text
+            or "rate" in error_text
+        ):
+
+            message = (
+                "Gemini API limit has been reached."
+            )
+
+        else:
+
+            message = str(e)
+
         return JsonResponse(
             {
                 "status": "error",
-                "message": str(e)
+                "message": message
             },
             status=500
         )

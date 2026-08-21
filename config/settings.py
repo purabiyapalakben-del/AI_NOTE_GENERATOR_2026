@@ -4,9 +4,19 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = "django-insecure-change-this-later"
+# =========================================================
+# SECURITY
+# =========================================================
 
-DEBUG = True
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-change-this-later"
+)
+
+# Local = True
+# Render = False
+DEBUG = os.environ.get("RENDER") is None
+
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -14,6 +24,10 @@ ALLOWED_HOSTS = [
     ".onrender.com",
 ]
 
+
+# =========================================================
+# INSTALLED APPS
+# =========================================================
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -27,8 +41,15 @@ INSTALLED_APPS = [
 ]
 
 
+# =========================================================
+# MIDDLEWARE
+# =========================================================
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+
+    # WhiteNoise
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
 
@@ -44,8 +65,16 @@ MIDDLEWARE = [
 ]
 
 
+# =========================================================
+# URL CONFIGURATION
+# =========================================================
+
 ROOT_URLCONF = "config.urls"
 
+
+# =========================================================
+# TEMPLATES
+# =========================================================
 
 TEMPLATES = [
     {
@@ -69,8 +98,16 @@ TEMPLATES = [
 ]
 
 
+# =========================================================
+# WSGI
+# =========================================================
+
 WSGI_APPLICATION = "config.wsgi.application"
 
+
+# =========================================================
+# DATABASE
+# =========================================================
 
 DATABASES = {
     "default": {
@@ -81,8 +118,16 @@ DATABASES = {
 }
 
 
+# =========================================================
+# PASSWORD VALIDATION
+# =========================================================
+
 AUTH_PASSWORD_VALIDATORS = []
 
+
+# =========================================================
+# LANGUAGE / TIME
+# =========================================================
 
 LANGUAGE_CODE = "en-us"
 
@@ -93,17 +138,29 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = "static/"
+# =========================================================
+# STATIC FILES
+# =========================================================
+
+STATIC_URL = "/static/"
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STATICFILES_STORAGE = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
+
+
+# =========================================================
+# DEFAULT PRIMARY KEY
+# =========================================================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# ==============================
+# =========================================================
 # LOGIN / SESSION
-# ==============================
+# =========================================================
 
 LOGIN_URL = "/login/"
 
@@ -116,9 +173,9 @@ SESSION_COOKIE_AGE = 1209600
 SESSION_SAVE_EVERY_REQUEST = True
 
 
-# ==============================
+# =========================================================
 # RENDER / HTTPS
-# ==============================
+# =========================================================
 
 if os.environ.get("RENDER"):
 
